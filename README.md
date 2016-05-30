@@ -32,8 +32,8 @@ export default Ember.Controller.extend({
   init() {
     this._super(...arguments);
     this.get('masterTab')
-      .run(() => alert('I am the master tab!'))
-      .else(() => alert('I am NOT the master tab. :('));
+      .run(() => alert('I am the master tab!')) // will only run on the master tab
+      .else(() => alert('I am NOT the master tab. :(')); // will only run on slave tabs
   }
 });
 ```
@@ -50,7 +50,7 @@ export default Ember.Controller.extend({
   init() {
     this._super(...arguments);
     this.get('masterTab')
-      .lock('some-identifier', () => {
+      .lock('some-identifier', () => { // will only run on the master tab
         return Ember.$.getJSON('/api/endpoint').then(
           data => {
             alert(`I got: ${data.value}`);
@@ -62,15 +62,15 @@ export default Ember.Controller.extend({
             return message;
           });
       })
-      .wait(
-        (result, waited) => { // success
+      .wait( // callbacks will only run on slave tabs
+        (result, waited) => { // success on master tab
           const data = JSON.parse(result);
           const info = waited ?
             'It was running this task at the same time as me.' :
             'It had previously run this task.';
           alert(`The master tab got: ${data.value}. ${info}`);
         },
-        (error, waited) => { // failure
+        (error, waited) => { // failure on master tab
           alert(`The master tab got an error: ${error}.`);
         } 
       );
