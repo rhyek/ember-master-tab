@@ -52,28 +52,46 @@ export default Ember.Controller.extend({
   init() {
     this._super(...arguments);
     this.get('masterTab').lock('some-identifier', () => {
-      return Ember.$.getJSON('/api/endpoint').then(data => {
-        window.localStorage['the-data'] = data;
-        alert(`I got: ${data}`);
-      });
-    }).wait(waited => {
-      const data = window.localStorage['the-data'];
-      const info = waited ?
-        'It was running this task at the same time as me.' :
-        'It had previously run this task.';
-      alert(`The master tab got: ${data}. ${info}`); 
-    });
+      return Ember.$.getJSON('/api/endpoint').then(
+        data => {
+          alert(`I got: ${data.value}`);
+          return JSON.stringify(data);
+        },
+        error => {
+          const message = error.responseText;
+          alert(`Error: ${message}`);
+          return message;
+        });
+    }).wait(
+      (result, waited) => { // success
+        const data = JSON.parse(result);
+        const info = waited ?
+          'It was running this task at the same time as me.' :
+          'It had previously run this task.';
+        alert(`The master tab got: ${data.value}. ${info}`);
+      },
+      (error, waited) => { // failure
+        alert(`The master tab got an error: ${error}.`);
+      } 
+    );
   }
 });
 ```
 *Notes*:
 - `wait()` is optional.
-- If the master tab is currently running the promise, the callback
+- If the master tab is currently running the promise, the callbacks
   passed to `wait()` will execute once that promise resolves/rejects.
-  Otherwise, it will run immediately.
+  Otherwise, they will run immediately.
 - You don't *need* to use `lock().wait()` for promises. You use this
   if you need "slave" tabs to react to whatever the master tab's
-  promise did.
+  promise returns. A better way to do this would be for the master tab
+  to set some value on `localStorage` and then "slave" tabs would
+  have handlers for the `storage` event and update the UI automatically.
+- The service will save to `localStorage` whatever the promise returns.
+  This value will be passed to the appropriate callback given to `wait()`.
+  Note that `localStorage` only stores strings. So make sure whatever
+  your promise returns can easily be converted to something usable in
+  your `wait()` callbacks.
 
 ## License
 

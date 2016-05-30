@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import { debug, getFunc } from '../utils';
+import { debug } from '../utils';
 import { namespace, tabId, tabIdKey, shouldInvalidateMasterTabKey } from '../consts';
 
 /** 
@@ -106,16 +106,14 @@ export default Ember.Service.extend({
    * Runs the provided function if this is the master tab. If this is not the current tab, run
    * the function provided to 'else()'.
    */
-  run() {
+  run(func) {
     const _isMasterTab = isMasterTab();
     if (_isMasterTab) {
-      const func = getFunc(...arguments);
       func();
     }
     return {
-      else() {
+      else(func) {
         if (!_isMasterTab) {
-          const func = getFunc(...arguments);
           func();
         }
       }
@@ -128,42 +126,56 @@ export default Ember.Service.extend({
    * lock present currently, the function runs immediately. If there is, it will run once
    * the promise on the master tab resolves or rejects.
    */
-  lock() {
+  lock(lockName, func) {
     const _isMasterTab = isMasterTab();
-    const lockName = `${namespace}lock:${arguments[0]}`;
+    const lockNameKey = `${namespace}lock:${lockName}`;
+    const lockResultKey = `${lockNameKey}:result`;
+    const lockResultTypeKey = `${lockNameKey}:result-type`;
     if (_isMasterTab) {
-      if (this.lockNames.indexOf(lockName) === -1) {
-        this.lockNames.push(lockName);
-      }
-      const func = getFunc(...(Array.prototype.slice.call(arguments)).slice(1));
-      localStorage[lockName] = true;
+      [lockNameKey, lockResultKey, lockResultTypeKey].forEach(key => {
+        if (this.lockNames.indexOf(key) === -1) {
+          this.lockNames.push(key);
+        }
+      });
+      delete localStorage[lockResultKey];
+      delete localStorage[lockResultTypeKey];
+      localStorage[lockNameKey] = true;
       let p = func();
       if (!p || !p.then) {
         throw 'The function argument must return a thennable object.';
       }
-      const always = () => {
-        delete localStorage[lockName];
-        const index = this.lockNames.indexOf(lockName);
+      const callback = (type, result) => {
+        localStorage[lockResultTypeKey] = type;
+        localStorage[lockResultKey] = result;
+        delete localStorage[lockNameKey];
+        const index = this.lockNames.indexOf(lockNameKey);
         if (index > -1) {
           this.lockNames.splice(index, 1);
         }
       };
-      p.then(always, always);
+      p.then(result => callback('success', result), result => callback('failure', result));
+    }
+    function callCallback(success, failure, waited) {
+      const resultType = localStorage[lockResultTypeKey];
+      const func = resultType === 'success' ? success : failure;
+      const result = localStorage[lockResultKey];
+      if (func !== null) {
+        func(result, waited);
+      }
     }
     return {
-      wait() {
+      wait(success, failure = null) {
         if (!_isMasterTab) {
-          const func = getFunc(...arguments);
-          if (typeof localStorage[lockName] !== 'undefined') {
+          if (typeof localStorage[lockNameKey] !== 'undefined') {
             const handler = e => {
-              if (e.key === lockName && e.newValue === null) {
-                func(true);
+              if (e.key === lockNameKey && e.newValue === null) {
+                callCallback(success, failure, true);
                 window.removeEventListener('storage', handler);
               }
             };
             window.addEventListener('storage', handler);
           } else {
-            func(false);
+            callCallback(success, failure, false);
           }
         }
       }
