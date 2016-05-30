@@ -132,7 +132,7 @@ export default Ember.Service.extend({
     const lockResultKey = `${lockNameKey}:result`;
     const lockResultTypeKey = `${lockNameKey}:result-type`;
     if (_isMasterTab) {
-      [lockNameKey, lockResultKey, lockResultTypeKey].forEach(key => {
+      [lockNameKey].forEach(key => {
         if (this.lockNames.indexOf(key) === -1) {
           this.lockNames.push(key);
         }
@@ -158,7 +158,7 @@ export default Ember.Service.extend({
     return {
       wait(success, failure = null) {
         if (!_isMasterTab) {
-          const callCallback = (success, failure, waited) => {
+          const callCallback = waited => {
             const resultType = localStorage[lockResultTypeKey];
             const func = resultType === 'success' ? success : failure;
             const result = localStorage[lockResultKey];
@@ -170,12 +170,12 @@ export default Ember.Service.extend({
             const handler = e => {
               if (e.key === lockNameKey && e.newValue === null) {
                 window.removeEventListener('storage', handler);
-                callCallback(success, failure, true);
+                callCallback(true);
               }
             };
             window.addEventListener('storage', handler);
           } else {
-            callCallback(success, failure, false);
+            callCallback(false);
           }
         }
       }

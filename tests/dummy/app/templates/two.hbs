@@ -1,13 +1,14 @@
-{{#if person}}
+<p>
+  <strong>Last updated</strong>: {{data.time}}
+</p>
+{{#if data.person}}
   <p>
-  Id: {{person.id}}
-  </p>
-  <p>
-  Name: {{person.name}}
+  <strong>Id</strong>: {{data.person.id}}<br/>
+  <strong>Name</strong>: {{data.person.name}}<br/>
   </p>
 {{/if}}
-{{#if error}}
+{{#if data.error}}
   <p>
-    <strong>Error</strong>: {{error}}
+    <strong>Error</strong>: {{data.error}}
   </p>
 {{/if}}
