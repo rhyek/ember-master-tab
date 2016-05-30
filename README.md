@@ -13,6 +13,9 @@ you are saving on `localStorage` which you then use to update your UI through ev
 * If the current master tab closes or refreshes, any other tab can take the responsability at that time.
 * If the current master tab crashes, ***currently*** no other tab will take the responsability until
 a new tab is opened. 
+* This is not really meant to be used on routes/controllers. Although the examples show use
+  on controllers, this service is most useful on objects that provide global functionality to
+  your application, such as services.
 
 ## Installation
 
