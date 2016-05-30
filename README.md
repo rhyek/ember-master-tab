@@ -31,11 +31,9 @@ export default Ember.Controller.extend({
   masterTab: Ember.inject.service(),
   init() {
     this._super(...arguments);
-    this.get('masterTab').run(() => {
-      alert('I am the master tab!');
-    }).else(() => {
-      alert('I am NOT the master tab. :(');
-    });
+    this.get('masterTab')
+      .run(() => alert('I am the master tab!'))
+      .else(() => alert('I am NOT the master tab. :('));
   }
 });
 ```
@@ -51,29 +49,31 @@ export default Ember.Controller.extend({
   masterTab: Ember.inject.service(),
   init() {
     this._super(...arguments);
-    this.get('masterTab').lock('some-identifier', () => {
-      return Ember.$.getJSON('/api/endpoint').then(
-        data => {
-          alert(`I got: ${data.value}`);
-          return JSON.stringify(data);
+    this.get('masterTab')
+      .lock('some-identifier', () => {
+        return Ember.$.getJSON('/api/endpoint').then(
+          data => {
+            alert(`I got: ${data.value}`);
+            return JSON.stringify(data);
+          },
+          error => {
+            const message = error.responseText;
+            alert(`Error: ${message}`);
+            return message;
+          });
+      })
+      .wait(
+        (result, waited) => { // success
+          const data = JSON.parse(result);
+          const info = waited ?
+            'It was running this task at the same time as me.' :
+            'It had previously run this task.';
+          alert(`The master tab got: ${data.value}. ${info}`);
         },
-        error => {
-          const message = error.responseText;
-          alert(`Error: ${message}`);
-          return message;
-        });
-    }).wait(
-      (result, waited) => { // success
-        const data = JSON.parse(result);
-        const info = waited ?
-          'It was running this task at the same time as me.' :
-          'It had previously run this task.';
-        alert(`The master tab got: ${data.value}. ${info}`);
-      },
-      (error, waited) => { // failure
-        alert(`The master tab got an error: ${error}.`);
-      } 
-    );
+        (error, waited) => { // failure
+          alert(`The master tab got an error: ${error}.`);
+        } 
+      );
   }
 });
 ```

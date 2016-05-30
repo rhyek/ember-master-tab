@@ -155,22 +155,22 @@ export default Ember.Service.extend({
       };
       p.then(result => callback('success', result), result => callback('failure', result));
     }
-    function callCallback(success, failure, waited) {
-      const resultType = localStorage[lockResultTypeKey];
-      const func = resultType === 'success' ? success : failure;
-      const result = localStorage[lockResultKey];
-      if (func !== null) {
-        func(result, waited);
-      }
-    }
     return {
       wait(success, failure = null) {
         if (!_isMasterTab) {
+          const callCallback = (success, failure, waited) => {
+            const resultType = localStorage[lockResultTypeKey];
+            const func = resultType === 'success' ? success : failure;
+            const result = localStorage[lockResultKey];
+            if (func !== null) {
+              func(result, waited);
+            }
+          };
           if (typeof localStorage[lockNameKey] !== 'undefined') {
             const handler = e => {
               if (e.key === lockNameKey && e.newValue === null) {
-                callCallback(success, failure, true);
                 window.removeEventListener('storage', handler);
+                callCallback(success, failure, true);
               }
             };
             window.addEventListener('storage', handler);
