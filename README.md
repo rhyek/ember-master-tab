@@ -39,6 +39,9 @@ export default Ember.Controller.extend({
   }
 });
 ```
+*Notes*:
+- `else()` is optional. 
+
 **Working with promises:**
 
 ```js
@@ -53,7 +56,7 @@ export default Ember.Controller.extend({
         window.localStorage['the-data'] = data;
         alert(`I got: ${data}`);
       });
-    }).wait((waited) => {
+    }).wait(waited => {
       const data = window.localStorage['the-data'];
       const info = waited ?
         'It was running this task at the same time as me.' :
@@ -63,6 +66,14 @@ export default Ember.Controller.extend({
   }
 });
 ```
+*Notes*:
+- `wait()` is optional.
+- If the master tab is currently running the promise, the callback
+  passed to `wait()` will execute once that promise resolves/rejects.
+  Otherwise it will run immediately.
+- You don't *need* to use `lock().wait()` for promises. You use this
+  if you need "slave" tabs to react to whatever the master tab's
+  promise did. 
 
 ## License
 

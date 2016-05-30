@@ -55,11 +55,11 @@ export default Ember.Service.extend({
     window.addEventListener('storage', storageHandler);
     window.addEventListener('beforeunload', () => {
       window.removeEventListener('storage', storageHandler);
+      this.lockNames.forEach(l => {
+        delete localStorage[l];
+        debug(`Deleted lock [${l}].`);
+      });
       if (isMasterTab()) {
-        this.lockNames.forEach(l => {
-          delete localStorage[l];
-          debug(`Deleted lock [${l}].`);
-        });
         delete localStorage[tabIdKey];
         debug('Unregistered as master tab. ');
       }
@@ -122,7 +122,7 @@ export default Ember.Service.extend({
     };
   },
   /**
-   * Runs the provided function which should return a Promise if this is the master tab.
+   * Runs the provided function (which should return a Promise) if this is the master tab.
    * It creates a lock which is freed once the Promise is resolved or rejected.
    * If this is not the master tab, run the function provided to 'wait()'. If there is no
    * lock present currently, the function runs immediately. If there is, it will run once
