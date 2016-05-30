@@ -81,7 +81,8 @@ export default Ember.Controller.extend({
 - `wait()` is optional.
 - If the master tab is currently running the promise, the callbacks
   passed to `wait()` will execute once that promise resolves/rejects.
-  Otherwise, they will run immediately.
+  Otherwise, they will run immediately. These callbacks only run on
+  "slave" tabs.
 - You don't *need* to use `lock().wait()` for promises. You use this
   if you need "slave" tabs to react to whatever the master tab's
   promise returns. A better way to do this would be for the master tab
