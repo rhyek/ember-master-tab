@@ -103,7 +103,7 @@ export default Ember.Service.extend({
 - You use this if you need "slave" tabs to wait for whatever the master tab's
   promise returns. Maybe your service defers readiness of the application's
   initialization and you need the master tab to finish loading giving slave
-  tabs it's state.
+  tabs its state.
 - The service will save to `localStorage` whatever the promise returns.
   This value will be passed to the appropriate callback given to `wait()`.
   Note that `localStorage` only stores strings. So make sure whatever
