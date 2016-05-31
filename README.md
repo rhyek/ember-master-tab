@@ -12,10 +12,8 @@ you are saving on `localStorage` which you then use to update your UI through ev
 * The service ensures that only one master tab exists at any one time.
 * If the current master tab closes or refreshes, any other tab can take the responsability at that time.
 * If the current master tab crashes, ***currently*** no other tab will take the responsability until
-a new tab is opened. 
-* This is not really meant to be used on routes/controllers. Although the examples show use
-  on controllers, this service is most useful on objects that provide global functionality to
-  your application, such as services.
+  a new tab is opened. 
+* This service is most useful on objects that provide global functionality to your application, such as other services.
 
 ## Installation
 
@@ -25,72 +23,87 @@ a new tab is opened.
 
 You can clone this repository and have a look at the dummy app to see it in action.
 
-**Running simple functions:**
+**`run().else()`**
 
 ```js
+// services/server-time-run.js
 import Ember from 'ember';
 
-export default Ember.Controller.extend({
+export default Ember.Service.extend({
   masterTab: Ember.inject.service(),
+  currentTime: null,
   init() {
     this._super(...arguments);
-    this.get('masterTab')
-      .run(() => alert('I am the master tab!')) // will only run on the master tab
-      .else(() => alert('I am NOT the master tab. :(')); // will only run on slave tabs
+    window.addEventListener('storage', e => { // only slave tabs will receive this event
+      if (e.key === 'currentTime') {
+        this.set('currentTime', e.newValue);
+      }
+    });
+    this.updateTime();
+  },
+  updateTime() {
+    Ember.run.later(() => {
+      this.get('masterTab')
+        .run(() => {
+          Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
+            const currentTime = data.currentTime;
+            this.set('currentTime', currentTime);
+            localStorage['currentTime'] = currentTime;
+          });
+        })
+        .else(() => {
+          // Master tab is handling it.
+        });
+      this.updateTime();
+    }, 900);
   }
 });
 ```
 *Notes*:
 - `else()` is optional. 
 
-**Working with promises:**
+**`lock().wait()`**
 
 ```js
+// services/server-time-lock.js
 import Ember from 'ember';
 
-export default Ember.Controller.extend({
+export default Ember.Service.extend({
   masterTab: Ember.inject.service(),
   init() {
     this._super(...arguments);
-    this.get('masterTab')
-      .lock('some-identifier', () => { // will only run on the master tab
-        return Ember.$.getJSON('/api/endpoint').then(
-          data => {
-            alert(`I got: ${data.value}`);
-            return JSON.stringify(data);
-          },
-          error => {
-            const message = error.responseText;
-            alert(`Error: ${message}`);
-            return message;
+    this.updateTime();
+  },
+  currentTime: null,
+  updateTime() {
+    Ember.run.later(() => {
+      this.get('masterTab')
+        .lock('server-time', () => {
+          return Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
+            const currentTime = data.currentTime;
+            this.set('currentTime', currentTime);
+            return currentTime; // will be passed to slave tabs
           });
-      })
-      .wait( // callbacks will only run on slave tabs
-        (result, waited) => { // success on master tab
-          const data = JSON.parse(result);
-          const info = waited ?
-            'It was running this task at the same time as me.' :
-            'It had previously run this task.';
-          alert(`The master tab got: ${data.value}. ${info}`);
-        },
-        (error, waited) => { // failure on master tab
-          alert(`The master tab got an error: ${error}.`);
-        } 
-      );
+        })
+        .wait(currentTime => { // will only run on slave tabs; currentTime is the result from the master tab
+          this.set('currentTime', currentTime);
+        });
+      this.updateTime();
+    }, 900);
   }
 });
 ```
 *Notes*:
-- `wait()` is optional.
+- `wait()` is optional. It can take a second callback which runs if the
+  promise failed.
 - If the master tab is currently running the promise, the callbacks
   passed to `wait()` will execute once that promise resolves/rejects.
   Otherwise, they will run immediately. These callbacks only run on
   "slave" tabs.
-- You don't *need* to use `lock().wait()` for promises. You use this
-  if you need "slave" tabs to react to whatever the master tab's
-  promise returns. A better way to do this would be for the master tab
-  to set some value on `localStorage` and then "slave" tabs would
-  have handlers for the `storage` event and update the UI automatically.
+- You use this if you need "slave" tabs to wait for whatever the master tab's
+  promise returns. Maybe your service defers readiness of the application's
+  initialization and you need the master tab to finish loading giving slave
+  tabs it's state.
 - The service will save to `localStorage` whatever the promise returns.
   This value will be passed to the appropriate callback given to `wait()`.
   Note that `localStorage` only stores strings. So make sure whatever

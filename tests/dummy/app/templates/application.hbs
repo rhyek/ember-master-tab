@@ -1,5 +1,9 @@
 <h2 id="title">Ember Master Tab demo</h2>
 <p>Is this the master tab? <strong>{{#if masterTab.isMasterTab}}Yes{{else}}No{{/if}}</strong></p>
-{{link-to 'Test one' 'one'}}<br/>
-{{link-to 'Test two' 'two'}}
-{{outlet}}
+<pre>
+<strong>Current server time (lock)</strong> : {{serverTimeLock.currentTime}}
+<strong>Current server time (run)</strong>  : {{serverTimeRun.currentTime}}
+
+<strong>Counter [is master tab]</strong>    : {{counterIsMasterTab}}
+<strong>Counter [is not master tab]</strong>: {{counterIsNotMasterTab}}
+</pre>
