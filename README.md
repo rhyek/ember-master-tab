@@ -70,11 +70,11 @@ import Ember from 'ember';
 
 export default Ember.Service.extend({
   masterTab: Ember.inject.service(),
+  currentTime: null,
   init() {
     this._super(...arguments);
     this.updateTime();
   },
-  currentTime: null,
   updateTime() {
     Ember.run.later(() => {
       this.get('masterTab')
