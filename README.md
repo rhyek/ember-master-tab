@@ -65,8 +65,8 @@ export default Ember.Service.extend({
   make the function run irregardless of this being the master tab or not
   for that call on that tab and the function passed to `else()` will not
   run. Considering the previous example, this would be useful if a
-  controller calls `this.get('masterTab').updateTime(true)` directly on
-  any tab.
+  controller calls `this.get('serverTimeRun').updateTime(true)` directly
+  on any tab.
 
 **`lock(lockName, func1, force = false).wait(func2)`**
 
@@ -117,7 +117,7 @@ export default Ember.Service.extend({
   that call on that tab. It sets a lock and the callbacks passed to `wait()`
   will not run. If the master tab encounters a lock during this, it will instead
   run the `wait()` callbacks. Considering the previous example, this would
-  be useful if a controller calls `this.get('masterTab').updateTime(true)`
+  be useful if a controller calls `this.get('serverTimeLock').updateTime(true)`
   directly on any tab.
 - The service will save to `localStorage` whatever the promise returns.
   This value will be passed to the appropriate callback given to `wait()`.
