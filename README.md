@@ -63,9 +63,10 @@ export default Ember.Service.extend({
 - `else()` is optional.
 - `run()` takes a second optional `boolean` parameter. If `true` it will
   make the function run irregardless of this being the master tab or not
-  and the function passed to `else()` will not run for that tab. Considering
-  the previous example, this would be useful if a controller calls
-  `this.get('masterTab').updateTime(true)` directly on any tab.
+  for that call on that tab and the function passed to `else()` will not
+  run. Considering the previous example, this would be useful if a
+  controller calls `this.get('masterTab').updateTime(true)` directly on
+  any tab.
 
 **`lock(lockName, func1, force = false).wait(func2)`**
 
@@ -102,9 +103,9 @@ export default Ember.Service.extend({
 - `wait()` is optional. It can take a second callback which runs if the
   promise failed.
 - If the master tab is currently running the promise (there is a lock present),
-  the callbacks passed to `wait()` will execute once that promise resolves/rejects.
-  Otherwise, they will run immediately. These callbacks only run on
-  "slave" tabs, generally.
+  the callbacks passed to `wait()` will execute once that promise
+  resolves/rejects. Otherwise, they will run immediately. These callbacks
+  only run on "slave" tabs, generally.
 - You use this if you need "slave" tabs to wait for whatever the master
   tab's promise returns. Maybe your service defers readiness of the application's
   initialization and you need the master tab to finish loading giving slave
@@ -112,9 +113,9 @@ export default Ember.Service.extend({
 - The value passed to the `wait()` callbacks will be the last value returned
   by the `lock()` promise.
 - `lock()` takes a second optional `boolean` parameter. If `true` it will
-  make the function run irregardless of this being the master tab or not.
-  It sets a lock and the callbacks passed to `wait()` will not run for
-  that tab. If the master tab encounters a lock during this, it will instead
+  make the function run irregardless of this being the master tab or not for
+  that call on that tab. It sets a lock and the callbacks passed to `wait()`
+  will not run. If the master tab encounters a lock during this, it will instead
   run the `wait()` callbacks. Considering the previous example, this would
   be useful if a controller calls `this.get('masterTab').updateTime(true)`
   directly on any tab.
