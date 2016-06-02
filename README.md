@@ -24,6 +24,9 @@ you are saving on `localStorage` which you then use to update your UI through ev
 You can clone this repository and have a look at the dummy app to see it in action.
 
 **`run(func1, force = false).else(func2)`**
+- `func1`: If this is the master tab, run this function.
+- `force`: *(optional)* If `true`, run `func1` irregardless of this being the master tab or not.
+- `func2`: If this is *not* the master tab, run this instead.
 
 ```js
 // services/server-time-run.js
@@ -69,6 +72,11 @@ export default Ember.Service.extend({
   on any tab.
 
 **`lock(lockName, func1, force = false).wait(func2)`**
+- `lockName`: Name of the lock.
+- `func1`: Function which returns a `Promise` that will run only if this is the master tab.
+  Once the promise `resolve`s or `reject`s, the lock will be freed.
+- `force`: *(optional)* If `true`, run `func1` irregardless of this being the master tab or not.
+- `func2`: If this is *not* the master tab, run this instead once the lock has been freed.
 
 ```js
 // services/server-time-lock.js
