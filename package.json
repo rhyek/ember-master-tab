@@ -11,7 +11,10 @@
     "start": "ember server",
     "test": "ember try:testall"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rhyek/ember-master-tab.git"
+  },
   "engines": {
     "node": ">= 0.10.0"
   },
