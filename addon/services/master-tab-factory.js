@@ -69,7 +69,7 @@ export default Ember.Service.extend({
         debug('Trying to invalidate master tab.');
         this.resolve = resolve;
         this.contestTimeout = setTimeout(() => {
-          let shouldInvalidateMasterTab = eval(localStorage[shouldInvalidateMasterTabKey]);
+          const shouldInvalidateMasterTab = eval(localStorage[shouldInvalidateMasterTabKey]);
           if (shouldInvalidateMasterTab) {
             localStorage[shouldInvalidateMasterTabKey] = false;
             delete localStorage[tabIdKey];
@@ -106,14 +106,14 @@ export default Ember.Service.extend({
    * Runs the provided function if this is the master tab. If this is not the current tab, run
    * the function provided to 'else()'.
    */
-  run(func) {
+  run(func, force = false) {
     const _isMasterTab = isMasterTab();
-    if (_isMasterTab) {
+    if (_isMasterTab || force) {
       func();
     }
     return {
       else(func) {
-        if (!_isMasterTab) {
+        if (!_isMasterTab && !force) {
           func();
         }
       }
@@ -126,21 +126,20 @@ export default Ember.Service.extend({
    * lock present currently, the function runs immediately. If there is, it will run once
    * the promise on the master tab resolves or rejects.
    */
-  lock(lockName, func) {
+  lock(lockName, func, force = false) {
     const _isMasterTab = isMasterTab();
     const lockNameKey = `${namespace}lock:${lockName}`;
     const lockResultKey = `${lockNameKey}:result`;
     const lockResultTypeKey = `${lockNameKey}:result-type`;
-    if (_isMasterTab) {
-      [lockNameKey].forEach(key => {
-        if (this.lockNames.indexOf(key) === -1) {
-          this.lockNames.push(key);
-        }
-      });
+    const isLocked = typeof localStorage[lockNameKey] !== 'undefined';
+    if ((_isMasterTab || force) && !isLocked) {
+      localStorage[lockNameKey] = true;
       delete localStorage[lockResultKey];
       delete localStorage[lockResultTypeKey];
-      localStorage[lockNameKey] = true;
-      let p = func();
+      if (this.lockNames.indexOf(lockNameKey) === -1) {
+        this.lockNames.push(lockNameKey);
+      }
+      const p = func();
       if (!p || !p.then) {
         throw 'The function argument must return a thennable object.';
       }
@@ -157,7 +156,7 @@ export default Ember.Service.extend({
     }
     return {
       wait(success, failure = null) {
-        if (!_isMasterTab) {
+        if ((!_isMasterTab && !force) || isLocked) {
           const callCallback = waited => {
             const resultType = localStorage[lockResultTypeKey];
             const func = resultType === 'success' ? success : failure;
@@ -166,7 +165,7 @@ export default Ember.Service.extend({
               func(result, waited);
             }
           };
-          if (typeof localStorage[lockNameKey] !== 'undefined') {
+          if (isLocked) {
             const handler = e => {
               if (e.key === lockNameKey && e.newValue === null) {
                 window.removeEventListener('storage', handler);

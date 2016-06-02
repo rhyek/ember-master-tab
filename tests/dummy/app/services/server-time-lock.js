@@ -7,7 +7,7 @@ export default Ember.Service.extend({
     this._super(...arguments);
     this.updateTime();
   },
-  updateTime() {
+  updateTime(force = false) {
     Ember.run.later(() => {
       this.get('masterTab')
         .lock('server-time', () => {
@@ -16,7 +16,7 @@ export default Ember.Service.extend({
             this.set('currentTime', currentTime);
             return currentTime;
           });
-        })
+        }, force)
         .wait((currentTime, waited) => {
           this.set('currentTime', currentTime);
         });

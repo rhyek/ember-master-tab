@@ -12,7 +12,7 @@ export default Ember.Service.extend({
     });
     this.updateTime();
   },
-  updateTime() {
+  updateTime(force = false) {
     setTimeout(() => {
       this.get('masterTab')
         .run(() => {
@@ -21,7 +21,7 @@ export default Ember.Service.extend({
             this.set('currentTime', currentTime);
             localStorage['currentTime'] = currentTime;
           });
-        })
+        }, force)
         .else(() => {
           // Master tab is handling it.
         });

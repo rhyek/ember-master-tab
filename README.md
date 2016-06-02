@@ -23,7 +23,7 @@ you are saving on `localStorage` which you then use to update your UI through ev
 
 You can clone this repository and have a look at the dummy app to see it in action.
 
-**`run().else()`**
+**`run(func1, force = false).else(func2)`**
 
 ```js
 // services/server-time-run.js
@@ -60,9 +60,12 @@ export default Ember.Service.extend({
 });
 ```
 *Notes*:
+- `run()` takes a second optional `boolean` parameter. If `true` it will
+  make the function run irregardless of this being the master tab or not
+  and the function passed to `else()` will not run.
 - `else()` is optional. 
 
-**`lock().wait()`**
+**`lock(func1, force = false).wait(func2)`**
 
 ```js
 // services/server-time-lock.js
@@ -94,16 +97,22 @@ export default Ember.Service.extend({
 });
 ```
 *Notes*:
+- `lock()` takes a second optional `boolean` parameter. If `true` it will
+  make the function run irregardless of this being the master tab or not
+  and the function passed to `else()` will not run. If there is currently
+  a lock present, this parameter is ignored.
 - `wait()` is optional. It can take a second callback which runs if the
   promise failed.
-- If the master tab is currently running the promise, the callbacks
-  passed to `wait()` will execute once that promise resolves/rejects.
+- If the master tab is currently running the promise (there is a lock present),
+  the callbacks passed to `wait()` will execute once that promise resolves/rejects.
   Otherwise, they will run immediately. These callbacks only run on
   "slave" tabs.
 - You use this if you need "slave" tabs to wait for whatever the master tab's
   promise returns. Maybe your service defers readiness of the application's
   initialization and you need the master tab to finish loading giving slave
   tabs its state.
+- The value passed to the `wait()` callbacks will be the last value returned
+  by the `lock()` promise.
 - The service will save to `localStorage` whatever the promise returns.
   This value will be passed to the appropriate callback given to `wait()`.
   Note that `localStorage` only stores strings. So make sure whatever
