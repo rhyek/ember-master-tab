@@ -35,7 +35,7 @@ export default Ember.Service.extend({
   init() {
     this._super(...arguments);
     window.addEventListener('storage', e => { // only slave tabs will receive this event
-      if (e.key === 'currentTime') {
+      if (e.key === 'current-time-run') {
         this.set('currentTime', e.newValue);
       }
     });
@@ -48,7 +48,7 @@ export default Ember.Service.extend({
           Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
             const currentTime = data.currentTime;
             this.set('currentTime', currentTime);
-            localStorage['currentTime'] = currentTime;
+            localStorage['current-time-run'] = currentTime;
           });
         }, force)
         .else(() => {
@@ -124,6 +124,46 @@ export default Ember.Service.extend({
   Note that `localStorage` only stores strings. So make sure whatever
   your promise returns can easily be converted to something usable in
   your `wait()` callbacks.
+  
+**`isMasterTab` event**
+
+Whenever a tab is promoted to master status, the `masterTab` service will emit an `isMasterTab` event.
+So, following the theme of the previous examples, you could also work with `EventSource` objects
+(or `WebSocket`, etc.) like this:
+```js
+// services/server-time-sse.js
+import Ember from 'ember';
+
+export default Ember.Service.extend({
+  masterTab: Ember.inject.service(),
+  currentTime: null,
+  init() {
+    this._super(...arguments);
+    if (this.get('masterTab.isMasterTab')) {
+      this.setup();
+    }
+    this.get('masterTab').on('isMasterTab', () => {
+      this.setup();
+    });
+    window.addEventListener('storage', e => {
+      if (e.key === 'current-time-sse') {
+        this.set('currentTime', e.newValue);
+      }
+    });
+  },
+  setup() {
+    const sse = new EventSource('/sse');
+    sse.onmessage = e => {
+      this.set('currentTime', e.data);
+      window.localStorage['current-time-sse'] = e.data;
+    };
+  }
+});
+```
+*Notes*:
+- The event is only raised after the application has been initialized. Therefore,
+  the master tab will not emit it. It will only be triggered if the master
+  tab is closed/refreshed and a different tab is promoted.
 
 ## License
 

@@ -6,7 +6,7 @@ export default Ember.Service.extend({
   init() {
     this._super(...arguments);
     window.addEventListener('storage', e => {
-      if (e.key === 'currentTime') {
+      if (e.key === 'current-time-run') {
         this.set('currentTime', e.newValue);
       }
     });
@@ -19,7 +19,7 @@ export default Ember.Service.extend({
           Ember.$.getJSON('/api/current-time').then(data => {
             const currentTime = data.currentTime;
             this.set('currentTime', currentTime);
-            localStorage['currentTime'] = currentTime;
+            window.localStorage['current-time-run'] = currentTime;
           });
         }, force)
         .else(() => {

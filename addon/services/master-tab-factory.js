@@ -10,7 +10,7 @@ function isMasterTab() {
 }
 
 /** The service factory. */
-export default Ember.Service.extend({
+export default Ember.Service.extend(Ember.Evented, {
   /** Contains current lock names that will be deleted during the 'beforeunload' window event. */
   lockNames: [],
   resolve: null,
@@ -99,6 +99,9 @@ export default Ember.Service.extend({
     }
     Ember.run(() => {
       this.set('isMasterTab', success);
+      if (success) {
+        this.trigger('isMasterTab');
+      }
     });
     return success;
   },
