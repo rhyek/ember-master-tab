@@ -63,8 +63,8 @@ export default Ember.Service.extend({
 - `else()` is optional.
 - `run()` takes a second optional `boolean` parameter. If `true` it will
   make the function run irregardless of this being the master tab or not
-  and the function passed to `else()` will not run. Considering the previous
-  example, this would be useful if a controller calls
+  and the function passed to `else()` will not run for that tab. Considering
+  the previous example, this would be useful if a controller calls
   `this.get('masterTab').updateTime(true)` directly on any tab.
 
 **`lock(lockName, func1, force = false).wait(func2)`**
