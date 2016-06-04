@@ -10,22 +10,25 @@ export default Ember.Service.extend({
         this.set('currentTime', e.newValue);
       }
     });
-    this.updateTime();
+    this._updateTime();
+  },
+  _updateTime() {
+    setTimeout(() => {
+      this.updateTime();
+      this._updateTime();
+    }, 900);
   },
   updateTime(force = false) {
-    setTimeout(() => {
-      this.get('masterTab')
-        .run(() => {
-          Ember.$.getJSON('/api/current-time').then(data => {
-            const currentTime = data.currentTime;
-            this.set('currentTime', currentTime);
-            window.localStorage['current-time-run'] = currentTime;
-          });
-        }, force)
-        .else(() => {
-          // Master tab is handling it.
+    this.get('masterTab')
+      .run(() => {
+        Ember.$.getJSON('/api/current-time').then(data => {
+          const currentTime = data.currentTime;
+          this.set('currentTime', currentTime);
+          window.localStorage['current-time-run'] = currentTime;
         });
-      this.updateTime();
-    }, 900);
+      }, force)
+      .else(() => {
+        // Master tab is handling it.
+      });
   }
 });

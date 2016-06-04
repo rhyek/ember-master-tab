@@ -5,22 +5,25 @@ export default Ember.Service.extend({
   currentTime: null,
   init() {
     this._super(...arguments);
-    this.updateTime();
+    this._updateTime();
+  },
+  _updateTime() {
+    Ember.run.later(() => {
+      this.updateTime();
+      this._updateTime();
+    }, 900);
   },
   updateTime(force = false) {
-    Ember.run.later(() => {
-      this.get('masterTab')
-        .lock('server-time', () => {
-          return Ember.$.getJSON('/api/current-time').then(data => {
-            const currentTime = data.currentTime;
-            this.set('currentTime', currentTime);
-            return currentTime;
-          });
-        }, force)
-        .wait(currentTime => {
+    this.get('masterTab')
+      .lock('server-time', () => {
+        return Ember.$.getJSON('/api/current-time').then(data => {
+          const currentTime = data.currentTime;
           this.set('currentTime', currentTime);
+          return currentTime;
         });
-      this.updateTime();
-    }, 900);
+      }, force)
+      .wait(currentTime => {
+        this.set('currentTime', currentTime);
+      });
   }
 });

@@ -42,23 +42,26 @@ export default Ember.Service.extend({
         this.set('currentTime', e.newValue);
       }
     });
-    this.updateTime();
+    this._updateTime();
+  },
+  _updateTime() {
+    Ember.run.later(() => {
+      this.updateTime();
+      this._updateTime();
+    }, 900);
   },
   updateTime(force = false) {
-    Ember.run.later(() => {
-      this.get('masterTab')
-        .run(() => {
-          Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
-            const currentTime = data.currentTime;
-            this.set('currentTime', currentTime);
-            localStorage['current-time-run'] = currentTime;
-          });
-        }, force)
-        .else(() => {
-          // Master tab is handling it.
+    this.get('masterTab')
+      .run(() => {
+        Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
+          const currentTime = data.currentTime;
+          this.set('currentTime', currentTime);
+          localStorage['current-time-run'] = currentTime;
         });
-      this.updateTime();
-    }, 900);
+      }, force)
+      .else(() => {
+        // Master tab is handling it.
+      });
   }
 });
 ```
@@ -87,23 +90,26 @@ export default Ember.Service.extend({
   currentTime: null,
   init() {
     this._super(...arguments);
-    this.updateTime();
+    this._updateTime();
+  },
+  _updateTime() {
+    Ember.run.later(() => {
+      this.updateTime();
+      this._updateTime();
+    }, 900);
   },
   updateTime(force = false) {
-    Ember.run.later(() => {
-      this.get('masterTab')
-        .lock('server-time', () => {
-          return Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
-            const currentTime = data.currentTime;
-            this.set('currentTime', currentTime);
-            return currentTime; // will be passed to slave tabs
-          });
-        }, force)
-        .wait(currentTime => { // will only run on slave tabs; currentTime is the result from the master tab
+    this.get('masterTab')
+      .lock('server-time', () => {
+        return Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
+          const currentTime = data.currentTime;
           this.set('currentTime', currentTime);
+          return currentTime; // will be passed to slave tabs
         });
-      this.updateTime();
-    }, 900);
+      }, force)
+      .wait(currentTime => { // will only run on slave tabs; currentTime is the result from the master tab
+        this.set('currentTime', currentTime);
+      });
   }
 });
 ```

@@ -21,5 +21,10 @@ export default Ember.Controller.extend({
         .else(() => this.incrementProperty('counterIsNotMasterTab'));
       this.incrementCounter();
     }, 1000);
+  },
+  actions: {
+    updateTimeLock() {
+      this.get('serverTimeLock').updateTime(true);
+    }
   }
 });
