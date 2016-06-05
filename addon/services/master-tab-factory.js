@@ -109,14 +109,20 @@ export default Ember.Service.extend(Ember.Evented, {
    * Runs the provided function if this is the master tab. If this is not the current tab, run
    * the function provided to 'else()'.
    */
-  run(func, force = false) {
+  run(func, options = {}) {
+    if (typeof options !== 'object') {
+      throw 'Options must be an object.';
+    }
+    const finalOptions = Ember.assign({
+      force: false
+    }, options);
     const _isMasterTab = isMasterTab();
-    if (_isMasterTab || force) {
+    if (_isMasterTab || finalOptions.force) {
       func();
     }
     return {
       else(func) {
-        if (!_isMasterTab && !force) {
+        if (!_isMasterTab && !finalOptions.force) {
           func();
         }
       }
@@ -129,13 +135,21 @@ export default Ember.Service.extend(Ember.Evented, {
    * lock present currently, the function runs immediately. If there is, it will run once
    * the promise on the master tab resolves or rejects.
    */
-  lock(lockName, func, force = false) {
-    const _isMasterTab = isMasterTab();
+  lock(lockName, func, options = {}) {
+    if (typeof options !== 'object') {
+      throw 'Options must be an object.';
+    }
+    const finalOptions = Ember.assign({
+      force: false,
+      waitNext: true,
+      waitNextDelay: 1000
+    }, options);
     const lockNameKey = `${namespace}lock:${lockName}`;
     const lockResultKey = `${lockNameKey}:result`;
     const lockResultTypeKey = `${lockNameKey}:result-type`;
     const isLocked = typeof localStorage[lockNameKey] !== 'undefined';
-    if ((_isMasterTab || force) && !isLocked) {
+    const _isMasterTab = isMasterTab();
+    if ((_isMasterTab || finalOptions.force) && !isLocked) {
       localStorage[lockNameKey] = true;
       delete localStorage[lockResultKey];
       delete localStorage[lockResultTypeKey];
@@ -159,7 +173,7 @@ export default Ember.Service.extend(Ember.Evented, {
     }
     return {
       wait(success, failure = null) {
-        if ((!_isMasterTab && !force) || isLocked) {
+        if ((!_isMasterTab && !finalOptions.force) || isLocked) {
           const callCallback = waited => {
             const resultType = localStorage[lockResultTypeKey];
             const func = resultType === 'success' ? success : failure;
@@ -168,7 +182,7 @@ export default Ember.Service.extend(Ember.Evented, {
               func(result, waited);
             }
           };
-          if (isLocked) {
+          if (isLocked || finalOptions.waitNext) {
             const handler = e => {
               if (e.key === lockNameKey && e.newValue === null) {
                 window.removeEventListener('storage', handler);
@@ -176,6 +190,13 @@ export default Ember.Service.extend(Ember.Evented, {
               }
             };
             window.addEventListener('storage', handler);
+            if (finalOptions.waitNext) {
+              setTimeout(() => {
+                debug(`Waited long enough. (${finalOptions.waitNextDelay}ms)`);
+                window.removeEventListener('storage', handler);
+                callCallback(true);
+              }, finalOptions.waitNextDelay);
+            }
           } else {
             callCallback(false);
           }

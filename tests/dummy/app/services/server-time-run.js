@@ -26,7 +26,7 @@ export default Ember.Service.extend({
           this.set('currentTime', currentTime);
           window.localStorage['current-time-run'] = currentTime;
         });
-      }, force)
+      }, { force })
       .else(() => {
         // Master tab is handling it.
       });

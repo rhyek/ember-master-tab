@@ -23,9 +23,10 @@ you are saving on `localStorage` which you then use to update your UI through ev
 
 You can clone this repository and have a look at the dummy app to see it in action.
 
-**`run(func1, force = false).else(func2)`**
+**`run(func1, options = {}).else(func2)`**
 - `func1`: If this is the master tab, run this function.
-- `force`: *(optional)* If `true`, run `func1` irregardless of this being the master tab or not.
+- `options` *(optional)*:
+ - `force` *(optional, default: `false`)*: If `true`, run `func1` irregardless of this being the master tab or not.
 - `func2`: If this is *not* the master tab, run this instead.
 
 ```js
@@ -58,7 +59,7 @@ export default Ember.Service.extend({
           this.set('currentTime', currentTime);
           localStorage['current-time-run'] = currentTime;
         });
-      }, force)
+      }, { force })
       .else(() => {
         // Master tab is handling it.
       });
@@ -74,11 +75,14 @@ export default Ember.Service.extend({
   controller calls `this.get('serverTimeRun').updateTime(true)` directly
   on any tab.
 
-**`lock(lockName, func1, force = false).wait(func2)`**
+**`lock(lockName, func1, options = {}).wait(func2)`**
 - `lockName`: Name of the lock.
 - `func1`: Function which returns a `Promise` that will run only if this is the master tab.
   Once the promise `resolve`s or `reject`s, the lock will be freed.
-- `force`: *(optional)* If `true`, run `func1` irregardless of this being the master tab or not.
+- `options` *(optional)*:
+ - `force` *(optional, default: `false`)*: If `true`, run `func1` irregardless of this being the master tab or not.
+ - `waitNext` *(optional, default: `true`)*: If `true` and there is currently no lock present, wait a maximum of `waitNextDelay` until the lock has been obtained and released.
+ - `waitNextDelay` *(optional, default: 1000)*: If `waitNext` is `true`, wait this amount of milliseconds.
 - `func2`: If this is *not* the master tab, run this instead once the lock has been freed.
 
 ```js
@@ -106,7 +110,7 @@ export default Ember.Service.extend({
           this.set('currentTime', currentTime);
           return currentTime; // will be passed to slave tabs
         });
-      }, force)
+      }, { force })
       .wait(currentTime => { // will only run on slave tabs; currentTime is the result from the master tab
         this.set('currentTime', currentTime);
       });
@@ -126,7 +130,7 @@ export default Ember.Service.extend({
   tabs its state.
 - The value passed to the `wait()` callbacks will be the last value returned
   by the `lock()` promise.
-- `lock()` takes a second optional `boolean` parameter. If `true` it will
+- If `options.force` is `true` it will
   make the function run irregardless of this being the master tab or not for
   that call on that tab. It sets a lock and the callbacks passed to `wait()`
   will not run. If the master tab encounters a lock during this, it will instead

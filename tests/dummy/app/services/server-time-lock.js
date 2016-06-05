@@ -21,7 +21,7 @@ export default Ember.Service.extend({
           this.set('currentTime', currentTime);
           return currentTime;
         });
-      }, force)
+      }, { force })
       .wait(currentTime => {
         this.set('currentTime', currentTime);
       });
