@@ -192,7 +192,6 @@ export default Ember.Service.extend(Ember.Evented, {
             window.addEventListener('storage', handler);
             if (finalOptions.waitNext) {
               setTimeout(() => {
-                debug(`Waited long enough. (${finalOptions.waitNextDelay}ms)`);
                 window.removeEventListener('storage', handler);
                 callCallback(true);
               }, finalOptions.waitNextDelay);
