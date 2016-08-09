@@ -8,8 +8,10 @@ export default Ember.Service.extend({
     if (this.get('masterTab.isMasterTab')) {
       this.setup();
     }
-    this.get('masterTab').on('isMasterTab', () => {
-      this.setup();
+    this.get('masterTab').on('isMasterTab', isMaster => {
+      if (isMaster) {
+        this.setup();
+      }
     });
     window.addEventListener('storage', e => {
       if (e.key === 'current-time-sse') {

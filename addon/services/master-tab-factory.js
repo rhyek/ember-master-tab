@@ -25,11 +25,20 @@ export default Ember.Service.extend(Ember.Evented, {
     const storageHandler = e => {
       switch (e.key) {
         case tabIdKey:
-          const tabId = e.newValue;
-          if (tabId === null) {
+          const newTabId = e.newValue;
+          if (newTabId === null) {
+
             debug('Master tab currently being contested.');
             localStorage[shouldInvalidateMasterTabKey] = false;
             this.registerAsMasterTab();
+          } else {
+            if (this.get('isMasterTab') && e.oldValue !== null && tabId !== newTabId) {
+              debug('Lost master tab status. Probably race condition related.');
+              Ember.run(() => {
+                this.set('isMasterTab', false);
+                this.trigger('isMasterTab', false);
+              });
+            }
           }
           break;
         case shouldInvalidateMasterTabKey:
@@ -99,9 +108,7 @@ export default Ember.Service.extend(Ember.Evented, {
     }
     Ember.run(() => {
       this.set('isMasterTab', success);
-      if (success) {
-        this.trigger('isMasterTab');
-      }
+      this.trigger('isMasterTab', success);
     });
     return success;
   },

@@ -8,8 +8,10 @@ export default Ember.Controller.extend({
   init() {
     this._super(...arguments);
     this.incrementCounter();
-    this.get('masterTab').on('isMasterTab', () => {
-      window.alert("I'm now the master tab.");
+    this.get('masterTab').on('isMasterTab', isMaster => {
+      if (isMaster) {
+        window.alert("I'm now the master tab.");
+      }
     });
   },
   counterIsMasterTab: 0,
