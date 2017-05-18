@@ -73,24 +73,7 @@ export default Ember.Service.extend(Ember.Evented, {
         debug('Unregistered as master tab. ');
       }
     });
-    return new Ember.RSVP.Promise(resolve => {
-      if (!this.registerAsMasterTab()) {
-        debug('Trying to invalidate master tab.');
-        this.resolve = resolve;
-        this.contestTimeout = setTimeout(() => {
-          const shouldInvalidateMasterTab = eval(localStorage[shouldInvalidateMasterTabKey]);
-          if (shouldInvalidateMasterTab) {
-            localStorage[shouldInvalidateMasterTabKey] = false;
-            delete localStorage[tabIdKey];
-            this.registerAsMasterTab();
-          }
-          resolve();
-        }, 500);
-        localStorage[shouldInvalidateMasterTabKey] = true;
-      } else {
-        resolve();
-      }
-    });
+    return this.contestMasterTab();
   },
   isMasterTab: false,
   /** Tries to register as the master tab if there is no current master tab registered. */
@@ -111,6 +94,30 @@ export default Ember.Service.extend(Ember.Evented, {
       this.trigger('isMasterTab', success);
     });
     return success;
+  },
+
+  /**
+   * Returns a promise which attempts to contest the master tab.
+   */
+  contestMasterTab() {
+    return new Ember.RSVP.Promise(resolve => {
+      if (!this.registerAsMasterTab()) {
+        debug('Trying to invalidate master tab.');
+        this.resolve = resolve;
+        this.contestTimeout = setTimeout(() => {
+          const shouldInvalidateMasterTab = eval(localStorage[shouldInvalidateMasterTabKey]);
+          if (shouldInvalidateMasterTab) {
+            localStorage[shouldInvalidateMasterTabKey] = false;
+            delete localStorage[tabIdKey];
+            this.registerAsMasterTab();
+          }
+          resolve();
+        }, 500);
+        localStorage[shouldInvalidateMasterTabKey] = true;
+      } else {
+        resolve();
+      }
+    });
   },
   /**
    * Runs the provided function if this is the master tab. If this is not the current tab, run
