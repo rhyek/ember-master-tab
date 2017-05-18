@@ -20,7 +20,10 @@ export default Ember.Controller.extend({
     Ember.run.later(() => {
       this.get('masterTab')
         .run(() => this.incrementProperty('counterIsMasterTab'))
-        .else(() => this.incrementProperty('counterIsNotMasterTab'));
+        .else(() => {
+          this.incrementProperty('counterIsNotMasterTab');
+          this.get('masterTab').contestMasterTab();
+        });
       this.incrementCounter();
     }, 1000);
   },
