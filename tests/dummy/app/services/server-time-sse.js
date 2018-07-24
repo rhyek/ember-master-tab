@@ -1,7 +1,7 @@
-import Ember from 'ember';
+import Service, { inject as service } from '@ember/service';
 
-export default Ember.Service.extend({
-  masterTab: Ember.inject.service(),
+export default Service.extend({
+  masterTab: service(),
   currentTime: null,
   init() {
     this._super(...arguments);
