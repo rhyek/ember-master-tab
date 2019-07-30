@@ -1,10 +1,12 @@
-import Ember from 'ember';
+import { later } from '@ember/runloop';
+import { inject as service } from '@ember/service';
+import Controller from '@ember/controller';
 
-export default Ember.Controller.extend({
-  masterTab: Ember.inject.service(),
-  serverTimeLock: Ember.inject.service(),
-  serverTimeRun: Ember.inject.service(),
-  serverTimeSse: Ember.inject.service(),
+export default Controller.extend({
+  masterTab: service(),
+  serverTimeLock: service(),
+  serverTimeRun: service(),
+  serverTimeSse: service(),
   init() {
     this._super(...arguments);
     this.incrementCounter();
@@ -17,7 +19,7 @@ export default Ember.Controller.extend({
   counterIsMasterTab: 0,
   counterIsNotMasterTab: 0,
   incrementCounter() {
-    Ember.run.later(() => {
+    later(() => {
       this.get('masterTab')
         .run(() => this.incrementProperty('counterIsMasterTab'))
         .else(() => {

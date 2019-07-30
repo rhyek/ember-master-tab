@@ -1,8 +1,18 @@
-import Ember from 'ember';
+import { assign } from '@ember/polyfills';
+import { A } from '@ember/array';
+import { Promise } from 'rsvp';
+import { run } from '@ember/runloop';
+import Evented from '@ember/object/evented';
+import Service from '@ember/service';
 import { debug } from '../utils';
-import { namespace, tabId, tabIdKey, shouldInvalidateMasterTabKey } from '../consts';
+import {
+  namespace,
+  tabId,
+  tabIdKey,
+  shouldInvalidateMasterTabKey
+} from '../consts';
 
-/** 
+/**
  * Checks whether the current tab is the master tab.
  */
 function isMasterTab() {
@@ -10,9 +20,9 @@ function isMasterTab() {
 }
 
 /** The service factory. */
-export default Ember.Service.extend(Ember.Evented, {
+export default Service.extend(Evented, {
   /** Contains current lock names that will be deleted during the 'beforeunload' window event. */
-  lockNames: [],
+  lockNames: A(),
   resolve: null,
   contestTimeout: null,
   /**
@@ -34,7 +44,7 @@ export default Ember.Service.extend(Ember.Evented, {
           } else {
             if (this.get('isMasterTab') && e.oldValue !== null && tabId !== newTabId) {
               debug('Lost master tab status. Probably race condition related.');
-              Ember.run(() => {
+              run(() => {
                 this.set('isMasterTab', false);
                 this.trigger('isMasterTab', false);
               });
@@ -89,7 +99,7 @@ export default Ember.Service.extend(Ember.Evented, {
       }
       debug(`Trying to register as master tab... ${success ? 'SUCCESS' : 'FAILED'}.`);
     }
-    Ember.run(() => {
+    run(() => {
       this.set('isMasterTab', success);
       this.trigger('isMasterTab', success);
     });
@@ -100,7 +110,7 @@ export default Ember.Service.extend(Ember.Evented, {
    * Returns a promise which attempts to contest the master tab.
    */
   contestMasterTab() {
-    return new Ember.RSVP.Promise(resolve => {
+    return new Promise(resolve => {
       if (!this.registerAsMasterTab()) {
         debug('Trying to invalidate master tab.');
         this.resolve = resolve;
@@ -127,7 +137,7 @@ export default Ember.Service.extend(Ember.Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = Ember.assign({
+    const finalOptions = assign({
       force: false
     }, options);
     const _isMasterTab = isMasterTab();
@@ -153,7 +163,7 @@ export default Ember.Service.extend(Ember.Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = Ember.assign({
+    const finalOptions = assign({
       force: false,
       waitNext: true,
       waitNextDelay: 1000

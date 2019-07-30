@@ -1,14 +1,16 @@
-import Ember from 'ember';
+import $ from 'jquery';
+import { later } from '@ember/runloop';
+import Service, { inject as service } from '@ember/service';
 
-export default Ember.Service.extend({
-  masterTab: Ember.inject.service(),
+export default Service.extend({
+  masterTab: service(),
   currentTime: null,
   init() {
     this._super(...arguments);
     this._updateTime();
   },
   _updateTime() {
-    Ember.run.later(() => {
+    later(() => {
       this.updateTime();
       this._updateTime();
     }, 900);
@@ -16,7 +18,7 @@ export default Ember.Service.extend({
   updateTime(force = false) {
     this.get('masterTab')
       .lock('server-time', () => {
-        return Ember.$.getJSON('/api/current-time').then(data => {
+        return $.getJSON('/api/current-time').then(data => {
           const currentTime = data.currentTime;
           this.set('currentTime', currentTime);
           return currentTime;

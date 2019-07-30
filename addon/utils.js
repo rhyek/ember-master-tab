@@ -1,6 +1,9 @@
-import Ember from 'ember';
 import { namespace } from './consts';
 
 export function debug() {
-  Ember.Logger.debug(namespace, ...arguments);
+  if (console.debug) {
+    console.debug(namespace, ...arguments);
+  } else {
+    console.log(namespace, ...arguments);
+  }
 }
