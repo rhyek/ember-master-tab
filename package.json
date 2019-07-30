@@ -1,10 +1,6 @@
 {
   "name": "ember-master-tab",
-<<<<<<< HEAD
-  "version": "1.2.0",
-=======
   "version": "1.3.0",
->>>>>>> 2203ea113d604a2f923f8ee1c3f2b3e141a79484
   "description": "A library that provides a service which helps running a function on only one tab of an Ember application.",
   "keywords": [
     "ember-addon",
