@@ -1,5 +1,9 @@
 import { namespace } from './consts';
 
 export function debug() {
-  console.log(namespace, ...arguments);
+  if (console.debug) {
+    console.debug(namespace, ...arguments);
+  } else {
+    console.log(namespace, ...arguments);
+  }
 }

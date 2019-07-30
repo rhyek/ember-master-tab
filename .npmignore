@@ -18,14 +18,23 @@
 /.watchmanconfig
 /bower.json
 /config/ember-try.js
-/CONTRIBUTING.md
-/ember-cli-build.js
-/testem.js
-/tests/
-/yarn.lock
-.gitkeep
+/dist
+/tests
+/tmp
+**/.gitkeep
+.bowerrc
+.editorconfig
+.ember-cli
+.eslintrc.js
+.gitignore
+.watchmanconfig
+.travis.yml
+bower.json
+ember-cli-build.js
+testem.js
+yarn.lock
 
 # ember-try
-/.node_modules.ember-try/
-/bower.json.ember-try
-/package.json.ember-try
+.node_modules.ember-try/
+bower.json.ember-try
+package.json.ember-try

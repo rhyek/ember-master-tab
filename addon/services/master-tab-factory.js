@@ -1,4 +1,5 @@
 import { assign } from '@ember/polyfills';
+import { A } from '@ember/array';
 import { Promise } from 'rsvp';
 import { run } from '@ember/runloop';
 import Evented from '@ember/object/evented';
@@ -11,7 +12,7 @@ import {
   shouldInvalidateMasterTabKey
 } from '../consts';
 
-/** 
+/**
  * Checks whether the current tab is the master tab.
  */
 function isMasterTab() {
@@ -21,7 +22,7 @@ function isMasterTab() {
 /** The service factory. */
 export default Service.extend(Evented, {
   /** Contains current lock names that will be deleted during the 'beforeunload' window event. */
-  lockNames: [],
+  lockNames: A(),
   resolve: null,
   contestTimeout: null,
   /**
