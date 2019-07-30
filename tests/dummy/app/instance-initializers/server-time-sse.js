@@ -1,5 +1,7 @@
 export function initialize(instance) {
-  instance.lookup('service:server-time-sse');
+  if (!instance.application.testing) {
+    instance.lookup('service:server-time-sse');
+  }
 }
 
 export default {
