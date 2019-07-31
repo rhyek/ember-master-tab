@@ -1,7 +1,5 @@
-import Ember from 'ember';
-
 export function initialize(instance) {
-  if (!Ember.testing) {
+  if (!instance.application.testing) {
     instance.lookup('service:server-time-sse');
   }
 }

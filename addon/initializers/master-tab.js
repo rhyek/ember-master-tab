@@ -1,16 +1,15 @@
-import Ember from 'ember';
 import MasterTabService from '../services/master-tab-factory';
 
 export function initialize(application) {
-  if (!Ember.testing) {
-    const masterTab = MasterTabService.create();
-    application.unregister('service:master-tab-factory');
-    application.register('service:master-tab', masterTab, { instantiate: false });
-    application.deferReadiness();
-    masterTab.setup().then(() => {
-      application.advanceReadiness();
-    });
-  }
+    if (!application.testing) {
+      const masterTab = MasterTabService.create();
+      application.unregister('service:master-tab-factory');
+      application.register('service:master-tab', masterTab, { instantiate: false });
+      application.deferReadiness();
+      masterTab.setup().then(() => {
+        application.advanceReadiness();
+      });
+    }
 }
 
 export default {

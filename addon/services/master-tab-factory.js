@@ -34,7 +34,7 @@ export default Service.extend(Evented, {
   setup() {
     const storageHandler = e => {
       switch (e.key) {
-        case tabIdKey:
+        case tabIdKey: {
           const newTabId = e.newValue;
           if (newTabId === null) {
 
@@ -51,7 +51,8 @@ export default Service.extend(Evented, {
             }
           }
           break;
-        case shouldInvalidateMasterTabKey:
+        }
+        case shouldInvalidateMasterTabKey: {
           const shouldInvalidateMasterTab = eval(e.newValue);
           const _isMasterTab = isMasterTab();
           if (shouldInvalidateMasterTab && _isMasterTab) {
@@ -69,6 +70,7 @@ export default Service.extend(Evented, {
             }
           }
           break;
+        }
       }
     };
     window.addEventListener('storage', storageHandler);

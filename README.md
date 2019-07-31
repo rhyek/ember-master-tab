@@ -15,7 +15,6 @@ you are saving on `localStorage` which you then use to update your UI through ev
   a new tab is opened. 
 * This service is most useful on objects that provide global functionality to your application, such as other services.
 
-## Installation
 
 `ember install ember-master-tab`
 
