@@ -1,4 +1,5 @@
 # Ember Master Tab
+
 ## Synopsis
 
 This addon provides a `service` that allows you to run code on a single tab of your ember
@@ -6,6 +7,12 @@ application. You might find this useful if your app has functionality that for s
 does not make sense or it is wasteful/redundant to have it run on every tab that is currently
 open. For example, you might be continuously pulling some state from your server API that
 you are saving on `localStorage` which you then use to update your UI through event listeners.
+
+## Compatibility
+
+* Ember.js v3.12 or above
+* Ember CLI v2.13 or above
+* Node.js v10 or above
 
 ## Notes
 
