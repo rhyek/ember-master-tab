@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import fetch from 'fetch';
 import Service, { inject as service } from '@ember/service';
 
 export default Service.extend({
@@ -22,10 +22,15 @@ export default Service.extend({
   updateTime(force = false) {
     this.get('masterTab')
       .run(() => {
-        $.getJSON('/api/current-time').then(data => {
-          const currentTime = data.currentTime;
-          this.set('currentTime', currentTime);
-          window.localStorage['current-time-run'] = currentTime;
+        fetch('/api/current-time').then(response => {
+          if (response.ok) {
+            response.json()
+              .then((data) => {
+                const currentTime = data.currentTime;
+                this.set('currentTime', currentTime);
+                window.localStorage['current-time-run'] = currentTime;
+              });
+          }
         });
       }, { force })
       .else(() => {

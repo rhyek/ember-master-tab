@@ -22,8 +22,10 @@ export default Service.extend({
   setup() {
     const sse = new window.EventSource('/sse');
     sse.onmessage = e => {
-      this.set('currentTime', e.data);
-      window.localStorage['current-time-sse'] = e.data;
+      if ( !(this.get('isDestroyed') || this.get('isDestroying')) ) {
+        this.set('currentTime', e.data);
+        window.localStorage['current-time-sse'] = e.data;
+      }
     };
   }
 });
