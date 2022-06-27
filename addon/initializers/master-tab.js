@@ -7,6 +7,7 @@ export function initialize(application) {
       application.register('service:master-tab', masterTab, { instantiate: false });
       application.deferReadiness();
       masterTab.setup().then(() => {
+        masterTab.initialized = true;
         application.advanceReadiness();
       });
     }
