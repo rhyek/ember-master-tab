@@ -10,9 +10,9 @@ you are saving on `localStorage` which you then use to update your UI through ev
 
 ## Compatibility
 
-* Ember.js v3.12 or above
-* Ember CLI v2.13 or above
-* Node.js v10 or above
+* Ember.js v4.4 or above
+* Ember CLI v4.4 or above
+* Node.js v14 or above
 
 ## Notes
 
@@ -23,7 +23,7 @@ you are saving on `localStorage` which you then use to update your UI through ev
 * This service is most useful on objects that provide global functionality to your application, such as other services.
 
 
-`ember install ember-master-tab`
+`npm install ember-master-tab`
 
 ## Code Example
 
