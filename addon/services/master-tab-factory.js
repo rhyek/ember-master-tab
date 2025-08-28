@@ -1,6 +1,3 @@
-import { assign } from '@ember/polyfills';
-import { A } from '@ember/array';
-import { Promise } from 'rsvp';
 import { run } from '@ember/runloop';
 import Evented from '@ember/object/evented';
 import Service from '@ember/service';
@@ -22,7 +19,7 @@ function isMasterTab() {
 /** The service factory. */
 export default Service.extend(Evented, {
   /** Contains current lock names that will be deleted during the 'beforeunload' window event. */
-  lockNames: A(),
+  lockNames: [],
   resolve: null,
   contestTimeout: null,
   /**
@@ -139,7 +136,7 @@ export default Service.extend(Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = assign({
+    const finalOptions = Object.assign({
       force: false
     }, options);
     const _isMasterTab = isMasterTab();
@@ -165,7 +162,7 @@ export default Service.extend(Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = assign({
+    const finalOptions = Object.assign({
       force: false,
       waitNext: true,
       waitNextDelay: 1000
