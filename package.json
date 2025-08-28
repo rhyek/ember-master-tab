@@ -1,6 +1,6 @@
 {
   "name": "ember-master-tab",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A library that provides a service which helps running a function on only one tab of an Ember application.",
   "keywords": [
     "ember-addon",
@@ -82,9 +82,6 @@
     "stylelint-config-standard": "^32.0.0",
     "stylelint-prettier": "^3.0.0",
     "webpack": "^5.78.0"
-  },
-  "peerDependencies": {
-    "ember-source": "^4.0.0"
   },
   "engines": {
     "node": "14.* || 16.* || >= 18"
