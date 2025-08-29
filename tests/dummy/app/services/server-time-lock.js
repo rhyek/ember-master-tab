@@ -1,37 +1,41 @@
-import fetch from 'fetch';
-import { later } from '@ember/runloop';
 import Service, { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
+import fetch from 'fetch';
 
-export default Service.extend({
-  masterTab: service(),
-  currentTime: null,
-  init() {
-    this._super(...arguments);
+export default class ServerTimeLockService extends Service {
+  @service masterTab;
+
+  @tracked currentTime = null;
+
+  constructor() {
+    super(...arguments);
     this._updateTime();
-  },
+  }
+
   _updateTime() {
-    later(() => {
+    setTimeout(() => {
       this.updateTime();
       this._updateTime();
     }, 900);
-  },
-  updateTime(force = false) {
-    this.get('masterTab')
-      .lock('server-time', () => {
-        return fetch('/api/current-time').then(response => {
-          if (response.ok) {
-            return response.json()
-              .then((data) => {
-                const currentTime = data.currentTime;
-                this.set('currentTime', currentTime);
-                return currentTime;
-              });
-          }
-          return undefined;
-        });
-      }, { force })
-      .wait(currentTime => {
-        this.set('currentTime', currentTime);
+  }
+
+  async updateTime(force = false) {
+    this.masterTab
+      .lock(
+        'server-time',
+        async () => {
+          let response = await fetch('/api/current-time');
+          if (!response.ok) return;
+
+          let data = await response.json();
+          let currentTime = data.currentTime;
+          this.currentTime = currentTime;
+          return currentTime;
+        },
+        { force }
+      )
+      .wait((currentTime) => {
+        this.currentTime = currentTime;
       });
   }
-});
+}

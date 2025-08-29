@@ -1,37 +1,45 @@
-import { later } from '@ember/runloop';
-import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
+import { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
-export default Controller.extend({
-  masterTab: service(),
-  serverTimeLock: service(),
-  serverTimeRun: service(),
-  serverTimeSse: service(),
-  init() {
-    this._super(...arguments);
+export default class ApplicationController extends Controller {
+  @service masterTab;
+  @service serverTimeLock;
+  @service serverTimeRun;
+  @service serverTimeSse;
+
+  @tracked counterIsMasterTab = 0;
+  @tracked counterIsNotMasterTab = 0;
+
+  constructor() {
+    super(...arguments);
+
     this.incrementCounter();
-    this.get('masterTab').on('isMasterTab', isMaster => {
-      if (isMaster) {
+
+    // Subscribe to master tab change
+    this.masterTab.onIsMasterTabChange((event) => {
+      if (event.detail === true) {
         window.alert("I'm now the master tab.");
       }
     });
-  },
-  counterIsMasterTab: 0,
-  counterIsNotMasterTab: 0,
+  }
+
   incrementCounter() {
-    later(() => {
-      this.get('masterTab')
-        .run(() => this.incrementProperty('counterIsMasterTab'))
+    setTimeout(() => {
+      this.masterTab
+        .run(() => {
+          this.counterIsMasterTab++;
+        })
         .else(() => {
-          this.incrementProperty('counterIsNotMasterTab');
-          this.get('masterTab').contestMasterTab();
+          this.counterIsNotMasterTab++;
+          this.masterTab.contestMasterTab();
         });
+
       this.incrementCounter();
     }, 1000);
-  },
-  actions: {
-    updateTimeLock() {
-      this.get('serverTimeLock').updateTime(true);
-    }
   }
-});
+
+  updateTimeLock = (force = true) => {
+    this.serverTimeLock.updateTime(force);
+  };
+}

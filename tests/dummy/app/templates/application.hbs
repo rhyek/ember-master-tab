@@ -1,11 +1,25 @@
 <h2 id="title">Ember Master Tab demo</h2>
-<p>Is this the master tab? <strong>{{#if this.masterTab.isMasterTab}}Yes{{else}}No{{/if}}</strong></p>
+
+<p>
+  Is this the master tab?
+  <strong>{{if this.masterTab.isMasterTab "Yes" "No"}}</strong>
+</p>
+
 <pre>
-  <strong>Current server time (lock)</strong> : {{this.serverTimeLock.currentTime}} <button type="button" disabled={{this.masterTab.isMasterTab}} {{action "updateTimeLock"}}>Update here</button>
+  <strong>Current server time (lock)</strong> :
+  {{this.serverTimeLock.currentTime}}
+  <button
+    type="button"
+    disabled={{this.masterTab.isMasterTab}}
+    {{on "click" this.updateTimeLock}}
+  >
+    Update here
+  </button>
+
   <strong>Current server time (run)</strong>  : {{this.serverTimeRun.currentTime}}
   <strong>Current server time (sse)</strong>  : {{this.serverTimeSse.currentTime}}
 
   <strong>Counter [is master tab]</strong>    : {{this.counterIsMasterTab}}
   <strong>Counter [is not master tab]</strong>: {{this.counterIsNotMasterTab}}
 </pre>
-{{outlet}}
+
