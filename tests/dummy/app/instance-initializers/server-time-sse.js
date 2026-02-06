@@ -6,5 +6,5 @@ export function initialize(instance) {
 
 export default {
   name: 'server-time-sse',
-  initialize
+  initialize,
 };

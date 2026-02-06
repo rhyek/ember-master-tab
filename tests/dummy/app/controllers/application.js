@@ -10,7 +10,7 @@ export default Controller.extend({
   init() {
     this._super(...arguments);
     this.incrementCounter();
-    this.get('masterTab').on('isMasterTab', isMaster => {
+    this.masterTab.on('isMasterTab', (isMaster) => {
       if (isMaster) {
         window.alert("I'm now the master tab.");
       }
@@ -20,18 +20,18 @@ export default Controller.extend({
   counterIsNotMasterTab: 0,
   incrementCounter() {
     later(() => {
-      this.get('masterTab')
+      this.masterTab
         .run(() => this.incrementProperty('counterIsMasterTab'))
         .else(() => {
           this.incrementProperty('counterIsNotMasterTab');
-          this.get('masterTab').contestMasterTab();
+          this.masterTab.contestMasterTab();
         });
       this.incrementCounter();
     }, 1000);
   },
   actions: {
     updateTimeLock() {
-      this.get('serverTimeLock').updateTime(true);
-    }
-  }
+      this.serverTimeLock.updateTime(true);
+    },
+  },
 });

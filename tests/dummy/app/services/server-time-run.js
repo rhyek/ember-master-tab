@@ -6,7 +6,7 @@ export default Service.extend({
   currentTime: null,
   init() {
     this._super(...arguments);
-    window.addEventListener('storage', e => {
+    window.addEventListener('storage', (e) => {
       if (e.key === 'current-time-run') {
         this.set('currentTime', e.newValue);
       }
@@ -20,21 +20,23 @@ export default Service.extend({
     }, 900);
   },
   updateTime(force = false) {
-    this.get('masterTab')
-      .run(() => {
-        fetch('/api/current-time').then(response => {
-          if (response.ok) {
-            response.json()
-              .then((data) => {
+    this.masterTab
+      .run(
+        () => {
+          fetch('/api/current-time').then((response) => {
+            if (response.ok) {
+              response.json().then((data) => {
                 const currentTime = data.currentTime;
                 this.set('currentTime', currentTime);
                 window.localStorage['current-time-run'] = currentTime;
               });
-          }
-        });
-      }, { force })
+            }
+          });
+        },
+        { force }
+      )
       .else(() => {
         // Master tab is handling it.
       });
-  }
+  },
 });

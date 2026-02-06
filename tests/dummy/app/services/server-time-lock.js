@@ -16,22 +16,25 @@ export default Service.extend({
     }, 900);
   },
   updateTime(force = false) {
-    this.get('masterTab')
-      .lock('server-time', () => {
-        return fetch('/api/current-time').then(response => {
-          if (response.ok) {
-            return response.json()
-              .then((data) => {
+    this.masterTab
+      .lock(
+        'server-time',
+        () => {
+          return fetch('/api/current-time').then((response) => {
+            if (response.ok) {
+              return response.json().then((data) => {
                 const currentTime = data.currentTime;
                 this.set('currentTime', currentTime);
                 return currentTime;
               });
-          }
-          return undefined;
-        });
-      }, { force })
-      .wait(currentTime => {
+            }
+            return undefined;
+          });
+        },
+        { force }
+      )
+      .wait((currentTime) => {
         this.set('currentTime', currentTime);
       });
-  }
+  },
 });

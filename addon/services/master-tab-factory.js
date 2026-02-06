@@ -1,12 +1,13 @@
 import { run } from '@ember/runloop';
 import Evented from '@ember/object/evented';
 import Service from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 import { debug } from '../utils';
 import {
   namespace,
   tabId,
   tabIdKey,
-  shouldInvalidateMasterTabKey
+  shouldInvalidateMasterTabKey,
 } from '../consts';
 
 /**
@@ -16,12 +17,31 @@ function isMasterTab() {
   return localStorage[tabIdKey] === tabId;
 }
 
+/**
+ * Safely parses a boolean value from localStorage.
+ * LocalStorage stores all values as strings, so we need to parse them securely.
+ */
+function parseBooleanFromStorage(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  // Handle string representations
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  // Handle actual boolean (in case it's already parsed)
+  if (typeof value === 'boolean') return value;
+  // Default to false for any other value
+  return false;
+}
+
 /** The service factory. */
-export default Service.extend(Evented, {
+class MasterTabFactoryService extends Service.extend(Evented) {
   /** Contains current lock names that will be deleted during the 'beforeunload' window event. */
-  lockNames: [],
-  resolve: null,
-  contestTimeout: null,
+  lockNames = [];
+  resolve = null;
+  contestTimeout = null;
+  @tracked isMasterTab = false;
+
   /**
    * Sets up listeners on the 'storage' and 'beforeunload' window events.
    * Returns a promise that resolves immediately if this or another tab is the master tab and that
@@ -29,20 +49,19 @@ export default Service.extend(Evented, {
    * will resolve after a short delay while it invalidates the master tab.
    */
   setup() {
-    const storageHandler = e => {
+    const storageHandler = (e) => {
       switch (e.key) {
         case tabIdKey: {
           const newTabId = e.newValue;
           if (newTabId === null) {
-
             debug('Master tab currently being contested.');
             localStorage[shouldInvalidateMasterTabKey] = false;
             this.registerAsMasterTab();
           } else {
-            if (this.get('isMasterTab') && e.oldValue !== null && tabId !== newTabId) {
+            if (this.isMasterTab && e.oldValue !== null && tabId !== newTabId) {
               debug('Lost master tab status. Probably race condition related.');
               run(() => {
-                this.set('isMasterTab', false);
+                this.isMasterTab = false;
                 this.trigger('isMasterTab', false);
               });
             }
@@ -50,7 +69,7 @@ export default Service.extend(Evented, {
           break;
         }
         case shouldInvalidateMasterTabKey: {
-          const shouldInvalidateMasterTab = eval(e.newValue);
+          const shouldInvalidateMasterTab = parseBooleanFromStorage(e.newValue);
           const _isMasterTab = isMasterTab();
           if (shouldInvalidateMasterTab && _isMasterTab) {
             localStorage[shouldInvalidateMasterTabKey] = false;
@@ -73,7 +92,7 @@ export default Service.extend(Evented, {
     window.addEventListener('storage', storageHandler);
     window.addEventListener('beforeunload', () => {
       window.removeEventListener('storage', storageHandler);
-      this.lockNames.forEach(l => {
+      this.lockNames.forEach((l) => {
         delete localStorage[l];
         debug(`Deleted lock [${l}].`);
       });
@@ -83,8 +102,8 @@ export default Service.extend(Evented, {
       }
     });
     return this.contestMasterTab();
-  },
-  isMasterTab: false,
+  }
+
   /** Tries to register as the master tab if there is no current master tab registered. */
   registerAsMasterTab() {
     let success = false;
@@ -96,25 +115,29 @@ export default Service.extend(Evented, {
         localStorage[shouldInvalidateMasterTabKey] = false;
         success = true;
       }
-      debug(`Trying to register as master tab... ${success ? 'SUCCESS' : 'FAILED'}.`);
+      debug(
+        `Trying to register as master tab... ${success ? 'SUCCESS' : 'FAILED'}.`
+      );
     }
     run(() => {
-      this.set('isMasterTab', success);
+      this.isMasterTab = success;
       this.trigger('isMasterTab', success);
     });
     return success;
-  },
+  }
 
   /**
    * Returns a promise which attempts to contest the master tab.
    */
   contestMasterTab() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (!this.registerAsMasterTab()) {
         debug('Trying to invalidate master tab.');
         this.resolve = resolve;
         this.contestTimeout = setTimeout(() => {
-          const shouldInvalidateMasterTab = eval(localStorage[shouldInvalidateMasterTabKey]);
+          const shouldInvalidateMasterTab = parseBooleanFromStorage(
+            localStorage[shouldInvalidateMasterTabKey]
+          );
           if (shouldInvalidateMasterTab) {
             localStorage[shouldInvalidateMasterTabKey] = false;
             delete localStorage[tabIdKey];
@@ -127,7 +150,8 @@ export default Service.extend(Evented, {
         resolve();
       }
     });
-  },
+  }
+
   /**
    * Runs the provided function if this is the master tab. If this is not the current tab, run
    * the function provided to 'else()'.
@@ -136,9 +160,12 @@ export default Service.extend(Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = Object.assign({
-      force: false
-    }, options);
+    const finalOptions = Object.assign(
+      {
+        force: false,
+      },
+      options
+    );
     const _isMasterTab = isMasterTab();
     if (_isMasterTab || finalOptions.force) {
       func();
@@ -148,9 +175,10 @@ export default Service.extend(Evented, {
         if (!_isMasterTab && !finalOptions.force) {
           func();
         }
-      }
+      },
     };
-  },
+  }
+
   /**
    * Runs the provided function (which should return a Promise) if this is the master tab.
    * It creates a lock which is freed once the Promise is resolved or rejected.
@@ -162,11 +190,14 @@ export default Service.extend(Evented, {
     if (typeof options !== 'object') {
       throw 'Options must be an object.';
     }
-    const finalOptions = Object.assign({
-      force: false,
-      waitNext: true,
-      waitNextDelay: 1000
-    }, options);
+    const finalOptions = Object.assign(
+      {
+        force: false,
+        waitNext: true,
+        waitNextDelay: 1000,
+      },
+      options
+    );
     const lockNameKey = `${namespace}lock:${lockName}`;
     const lockResultKey = `${lockNameKey}:result`;
     const lockResultTypeKey = `${lockNameKey}:result-type`;
@@ -192,12 +223,15 @@ export default Service.extend(Evented, {
           this.lockNames.splice(index, 1);
         }
       };
-      p.then(result => callback('success', result), result => callback('failure', result));
+      p.then(
+        (result) => callback('success', result),
+        (result) => callback('failure', result)
+      );
     }
     return {
       wait(success, failure = null) {
         if ((!_isMasterTab && !finalOptions.force) || isLocked) {
-          const callCallback = waited => {
+          const callCallback = (waited) => {
             const resultType = localStorage[lockResultTypeKey];
             const func = resultType === 'success' ? success : failure;
             const result = localStorage[lockResultKey];
@@ -206,7 +240,7 @@ export default Service.extend(Evented, {
             }
           };
           if (isLocked || finalOptions.waitNext) {
-            const handler = e => {
+            const handler = (e) => {
               if (e.key === lockNameKey && e.newValue === null) {
                 window.removeEventListener('storage', handler);
                 callCallback(true);
@@ -223,7 +257,9 @@ export default Service.extend(Evented, {
             callCallback(false);
           }
         }
-      }
+      },
     };
   }
-});
+}
+
+export default MasterTabFactoryService;

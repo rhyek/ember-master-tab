@@ -1,11 +1,11 @@
 /*jshint node:true*/
-module.exports = function(app) {
+module.exports = function (app) {
   var express = require('express');
   var router = express.Router();
 
-  router.get('/', function(req, res) {
+  router.get('/', function (req, res) {
     res.send({
-      'currentTime': new Date().toISOString()
+      currentTime: new Date().toISOString(),
     });
   });
 

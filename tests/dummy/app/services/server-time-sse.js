@@ -8,12 +8,12 @@ export default Service.extend({
     if (this.get('masterTab.isMasterTab')) {
       this.setup();
     }
-    this.get('masterTab').on('isMasterTab', isMaster => {
+    this.masterTab.on('isMasterTab', (isMaster) => {
       if (isMaster) {
         this.setup();
       }
     });
-    window.addEventListener('storage', e => {
+    window.addEventListener('storage', (e) => {
       if (e.key === 'current-time-sse') {
         this.set('currentTime', e.newValue);
       }
@@ -21,11 +21,11 @@ export default Service.extend({
   },
   setup() {
     const sse = new window.EventSource('/sse');
-    sse.onmessage = e => {
-      if ( !(this.get('isDestroyed') || this.get('isDestroying')) ) {
+    sse.onmessage = (e) => {
+      if (!(this.isDestroyed || this.isDestroying)) {
         this.set('currentTime', e.data);
         window.localStorage['current-time-sse'] = e.data;
       }
     };
-  }
+  },
 });

@@ -12,14 +12,18 @@ var isDisabled = require('ember-cli-testem-http-mocks/lib/is-disabled');
 //   });
 // };
 function setupMocks(app) {
-  if (isDisabled()) { return; }
+  if (isDisabled()) {
+    return;
+  }
 
   var mocks = globSync('./mocks/**/*.js', { cwd: __dirname }).map(require);
 
-  mocks.forEach(function(route) { route(app); });
+  mocks.forEach(function (route) {
+    route(app);
+  });
 }
 
-module.exports = function(app) {
+module.exports = function (app) {
   var proxies = globSync('./proxies/**/*.js', { cwd: __dirname }).map(require);
 
   // Log proxy requests
@@ -27,7 +31,9 @@ module.exports = function(app) {
   app.use(morgan('dev'));
 
   setupMocks(app);
-  proxies.forEach(function(route) { route(app); });
+  proxies.forEach(function (route) {
+    route(app);
+  });
 };
 
 module.exports.setupMocks = setupMocks;

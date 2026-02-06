@@ -14,6 +14,28 @@ you are saving on `localStorage` which you then use to update your UI through ev
 * Ember CLI v4.4 or above
 * Node.js v14 or above
 
+## Modern Implementation
+
+As of version 3.0.0, the `master-tab-factory` service has been updated to use native ES6 class syntax for better performance, security, and maintainability:
+
+* **Native class syntax** - Uses modern `class` syntax instead of `Service.extend()`
+* **Secure implementation** - Replaces insecure `eval()` calls with safe boolean parsing
+* **Reactive `isMasterTab` property** - Uses `@tracked` decorator for automatic template updates when master tab status changes
+* **Full backward compatibility** - All existing APIs remain unchanged and work with both classic and native class patterns
+
+The examples in this README use **native class syntax** (Ember Octane style), which is the recommended approach for modern Ember applications. The service works seamlessly with both classic and native class implementations in your application.
+
+### Automatic Reactivity
+
+The `isMasterTab` property is now decorated with `@tracked`, which means templates automatically re-render when the master tab status changes:
+
+```hbs
+{{!-- This will automatically update when master tab status changes --}}
+<p>Is this the master tab? <strong>{{#if this.masterTab.isMasterTab}}Yes{{else}}No{{/if}}</strong></p>
+```
+
+When a tab loses or gains master status (e.g., when the master tab closes), any template or computed property referencing `this.masterTab.isMasterTab` will automatically update without requiring manual property observation or `set()` calls. This provides a seamless reactive experience with Ember's auto-tracking system.
+
 ## Notes
 
 * The service ensures that only one master tab exists at any one time.
@@ -37,40 +59,50 @@ You can clone this repository and have a look at the dummy app to see it in acti
 
 ```js
 // services/server-time-run.js
-import Ember from 'ember';
+import Service from '@ember/service';
+import { service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
+import { later } from '@ember/runloop';
 
-export default Ember.Service.extend({
-  masterTab: Ember.inject.service(),
-  currentTime: null,
-  init() {
-    this._super(...arguments);
-    window.addEventListener('storage', e => { // only slave tabs will receive this event
+export default class ServerTimeRunService extends Service {
+  @service masterTab;
+  @tracked currentTime = null;
+
+  constructor() {
+    super(...arguments);
+    window.addEventListener('storage', (e) => {
+      // only slave tabs will receive this event
       if (e.key === 'current-time-run') {
-        this.set('currentTime', e.newValue);
+        this.currentTime = e.newValue;
       }
     });
     this._updateTime();
-  },
+  }
+
   _updateTime() {
-    Ember.run.later(() => {
+    later(() => {
       this.updateTime();
       this._updateTime();
     }, 900);
-  },
+  }
+
   updateTime(force = false) {
-    this.get('masterTab')
+    this.masterTab
       .run(() => {
-        Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
-          const currentTime = data.currentTime;
-          this.set('currentTime', currentTime);
-          localStorage['current-time-run'] = currentTime;
-        });
+        fetch('/api/current-time')
+          .then((response) => response.json())
+          .then((data) => {
+            // will only run on the master tab
+            const currentTime = data.currentTime;
+            this.currentTime = currentTime;
+            localStorage['current-time-run'] = currentTime;
+          });
       }, { force })
       .else(() => {
         // Master tab is handling it.
       });
   }
-});
+}
 ```
 *Notes*:
 - `else()` is optional.
@@ -78,7 +110,7 @@ export default Ember.Service.extend({
   make the function run irregardless of this being the master tab or not
   for that call on that tab and the function passed to `else()` will not
   run. Considering the previous example, this would be useful if a
-  controller calls `this.get('serverTimeRun').updateTime(true)` directly
+  controller calls `this.serverTimeRun.updateTime(true)` directly
   on any tab.
 
 **`lock(lockName, func1, options = {}).wait(func2)`**
@@ -93,35 +125,49 @@ export default Ember.Service.extend({
 
 ```js
 // services/server-time-lock.js
-import Ember from 'ember';
+import Service from '@ember/service';
+import { service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
+import { later } from '@ember/runloop';
 
-export default Ember.Service.extend({
-  masterTab: Ember.inject.service(),
-  currentTime: null,
-  init() {
-    this._super(...arguments);
+export default class ServerTimeLockService extends Service {
+  @service masterTab;
+  @tracked currentTime = null;
+
+  constructor() {
+    super(...arguments);
     this._updateTime();
-  },
+  }
+
   _updateTime() {
-    Ember.run.later(() => {
+    later(() => {
       this.updateTime();
       this._updateTime();
     }, 900);
-  },
+  }
+
   updateTime(force = false) {
-    this.get('masterTab')
-      .lock('server-time', () => {
-        return Ember.$.getJSON('/api/current-time').then(data => { // will only run on the master tab
-          const currentTime = data.currentTime;
-          this.set('currentTime', currentTime);
-          return currentTime; // will be passed to slave tabs
-        });
-      }, { force })
-      .wait(currentTime => { // will only run on slave tabs; currentTime is the result from the master tab
-        this.set('currentTime', currentTime);
+    this.masterTab
+      .lock(
+        'server-time',
+        () => {
+          return fetch('/api/current-time')
+            .then((response) => response.json())
+            .then((data) => {
+              // will only run on the master tab
+              const currentTime = data.currentTime;
+              this.currentTime = currentTime;
+              return currentTime; // will be passed to slave tabs
+            });
+        },
+        { force }
+      )
+      .wait((currentTime) => {
+        // will only run on slave tabs; currentTime is the result from the master tab
+        this.currentTime = currentTime;
       });
   }
-});
+}
 ```
 *Notes*:
 - `wait()` is optional. It can take a second callback which runs if the
@@ -141,7 +187,7 @@ export default Ember.Service.extend({
   that call on that tab. It sets a lock and the callbacks passed to `wait()`
   will not run. If the master tab encounters a lock during this, it will instead
   run the `wait()` callbacks. Considering the previous example, this would
-  be useful if a controller calls `this.get('serverTimeLock').updateTime(true)`
+  be useful if a controller calls `this.serverTimeLock.updateTime(true)`
   directly on any tab.
 - The service will save to `localStorage` whatever the promise returns.
   This value will be passed to the appropriate callback given to `wait()`.
@@ -156,40 +202,44 @@ So, following the theme of the previous examples, you could also work with `Even
 (or `WebSocket`, etc.) like this:
 ```js
 // services/server-time-sse.js
-import Ember from 'ember';
+import Service from '@ember/service';
+import { service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
-export default Ember.Service.extend({
-  masterTab: Ember.inject.service(),
-  currentTime: null,
-  init() {
-    this._super(...arguments);
-    if (this.get('masterTab.isMasterTab')) {
+export default class ServerTimeSseService extends Service {
+  @service masterTab;
+  @tracked currentTime = null;
+
+  constructor() {
+    super(...arguments);
+    if (this.masterTab.isMasterTab) {
       this.setup();
     }
-    this.get('masterTab').on('isMasterTab', isMaster => {
+    this.masterTab.on('isMasterTab', (isMaster) => {
       if (isMaster) {
         this.setup();
       }
     });
-    window.addEventListener('storage', e => {
+    window.addEventListener('storage', (e) => {
       if (e.key === 'current-time-sse') {
-        this.set('currentTime', e.newValue);
+        this.currentTime = e.newValue;
       }
     });
-  },
+  }
+
   setup() {
     const sse = new EventSource('/sse');
-    sse.onmessage = e => {
-      this.set('currentTime', e.data);
+    sse.onmessage = (e) => {
+      this.currentTime = e.data;
       window.localStorage['current-time-sse'] = e.data;
     };
-    this.get('masterTab').on('isMasterTab', isMaster => {
+    this.masterTab.on('isMasterTab', (isMaster) => {
       if (!isMaster) {
         sse.close();
       }
     });
   }
-});
+}
 ```
 *Notes*:
 - The event is only raised after the application has been initialized. Therefore,
